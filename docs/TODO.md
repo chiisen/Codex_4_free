@@ -51,3 +51,21 @@
 - 環境（OS / 方案）：macOS / Codex app（雙 agent）
 - 結果摘要：已完成多個並行任務驗證，可穩定切換 agent 且上下文維持正常，未出現任務互相污染。
 - 補充說明：後續可持續以不同任務型態（讀取、修改、驗證）觀察長時段並行穩定性。
+
+## Worktree 最小分支策略（推薦）
+
+- 說明：`git worktree` 不一定要建立 branch。若只是短期驗證，可用 detached HEAD；若要提交，建短命 branch，合併後立即刪除，避免分支數量膨脹。
+- 短期驗證（不提交）：
+  - `git worktree add --detach ../wt-exp main`
+  - 適合看 diff、跑測試、重現問題。
+- 需要提交（可追蹤）：
+  - `git worktree add ../wt-task -b codex/task-xxx main`
+  - 完成後合併，再執行 `git worktree remove ../wt-task` 與 `git branch -D codex/task-xxx`。
+- 清理建議：
+  - 定期刪除已合併的短命分支，保持主分支清爽。
+
+## 模型使用情境與成本考量
+
+- GPT-5.3-Codex（API/standard/batch tiers）：每百萬 token 的 input 約 $1.75、output $14，適合需要高 reasoning effort、agentic coding 安全控管與大型 diff 產出。
+- GPT-5.1-Codex-Mini：每百萬 token 的 input $0.25、output $2，context 同樣 400k、可輸入圖像，但能力較弱，適合高頻、短回合的測試、格式化、對話驗證或 prototyping，用戶想壓低單次費用時可優先用它。
+- 建議做法：先用 GPT-5.1-Codex-Mini 撰寫結構化提示與測試迭代，確定步驟後再轉 GPT-5.3-Codex 處理正式的 agentic 自動化或難度更高的 refactor。
